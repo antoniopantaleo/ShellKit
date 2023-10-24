@@ -1,0 +1,32 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  run_tests:
+    runs-on: macos-13
+    name: Run test suite
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build package
+      run: swift build
+    - name: Run unit tests
+      run: swift test --parallel --enable-code-coverage
+    - name: Prepare code coverage
+      run: |
+        xcrun llvm-cov \
+        export \
+        -format="lcov" \
+        .build/x86_64-apple-macosx/debug/ShellKitPackageTests.xctest/Contents/MacOS/ShellKitPackageTests \
+        -instr-profile \
+        .build/x86_64-apple-macosx/debug/codecov/default.profdata > coverage.lcov
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        swift: true
+        os: macos
+        fail_ci_if_error: true
+        files: coverage.lcov
