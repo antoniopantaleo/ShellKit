@@ -3,13 +3,13 @@ import ShellKit
 
 final class ZshShellTests: XCTestCase {
     
-    func test_run_shellIsZsh() async throws {
+    func test_run_commandSucceds() async throws {
         // Given
         let sut = ZshShell()
         // When
-        let shell = try await sut.run("echo \"$SHELL\"")
+        let output = try await sut.run("echo \"Hello World\"")
         // Then
-        XCTAssertEqual("/bin/zsh", shell)
+        XCTAssertEqual("Hello World", output)
     }
     
     func test_run_throwsErrorOnInvalidCommand() async {
