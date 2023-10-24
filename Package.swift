@@ -14,7 +14,8 @@ let package = Package(
     targets: [
         .target(name: "ShellKit"),
         .testTarget(
-            name: "ShellKitTests",
-            dependencies: ["ShellKit"]),
+            name: "ZshShellTests",
+            dependencies: ["ShellKit"]
+        )
     ]
 )
