@@ -1,0 +1,34 @@
+{
+  "configurations" : [
+    {
+      "id" : "6737D2ED-E21A-4BCC-BF9A-8F39BEF86A57",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:",
+          "identifier" : "ShellKit",
+          "name" : "ShellKit"
+        }
+      ]
+    },
+    "testExecutionOrdering" : "random"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "ZshShellTests",
+        "name" : "ZshShellTests"
+      }
+    }
+  ],
+  "version" : 1
+}
