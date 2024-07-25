@@ -1,24 +1,24 @@
 import XCTest
 import ShellKit
 
-final class ZshShellTests: XCTestCase {
+final class EnvironmentShellTests: XCTestCase {
     
     func test_run_commandSucceds() async throws {
         // Given
-        let sut = ZshShell()
+        let sut = EnvironmentShell()
         // When
-        let output = try await sut.run("echo \"Hello World\"")
+        let output = try await sut.run("echo", "Hello World")
         // Then
         XCTAssertEqual("Hello World", output)
     }
     
     func test_run_throwsErrorOnInvalidCommand() async {
         // Given
-        let sut = ZshShell()
-        let expectedErrorString = "zsh:1: command not found: invalid"
+        let sut = EnvironmentShell()
+        let expectedErrorString = "env: command_that_does_not_exist: No such file or directory"
         // When
         do {
-            let output = try await sut.run("invalid command")
+            let output = try await sut.run("command_that_does_not_exist")
             XCTFail("Expected to fail, got \(output) instead")
         } catch {
             // Then
@@ -26,16 +26,17 @@ final class ZshShellTests: XCTestCase {
         }
     }
     
-    func test_run_throwsErrorOnNonUtf8Output() async {
+    func test_run_throwsErrorOnNonUtf8Output() async throws {
         // Given
-        let sut = ZshShell()
+        let sut = EnvironmentShell()
         let expectedError = NSError(
             domain: NSCocoaErrorDomain,
             code: NSFileReadInapplicableStringEncodingError
         )
+        let nonUTF8String = try XCTUnwrap(String(data: Data([0x80]), encoding: .ascii))
         // When
         do {
-            let output = try await sut.run("echo -n \"\\x80\"")
+            let output = try await sut.run("echo", "-n", nonUTF8String)
             XCTFail("Expected to fail, got \(output) instead")
         } catch {
             // Then
@@ -46,10 +47,10 @@ final class ZshShellTests: XCTestCase {
     func test_run_isOnBackgroundThread() throws {
         XCTAssertTrue(Thread.isMainThread)
         // Given
-        let sut = ZshShell()
+        let sut = EnvironmentShell()
         Task {
             // When
-            _ = try await sut.run("echo Hello World")
+            _ = try await sut.run("echo", "Hello World")
             // Then
             XCTAssertFalse(Thread.isMainThread)
         }

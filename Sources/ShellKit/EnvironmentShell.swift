@@ -1,5 +1,5 @@
 //
-//  ZshShell.swift
+//  EnvironmentShell.swift
 //  
 //
 //  Created by Antonio on 24/10/23.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ZshShell: Shell {
+public struct EnvironmentShell: Shell {
     
     private var COMMAND_OK_CODE: Int { 0 }
     private var encodingError: NSError {
@@ -20,15 +20,15 @@ public struct ZshShell: Shell {
     public init() {}
     
     @discardableResult
-    public func run(_ command: String) async throws -> String {
+    public func run(_ command: String...) async throws -> String {
         let task = Process()
         let pipe = Pipe()
         
         task.qualityOfService = .userInitiated
         task.standardOutput = pipe
         task.standardError = pipe
-        task.arguments = ["-c", command]
-        task.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        task.arguments = command
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         task.standardInput = nil
         
         try task.run()
