@@ -22,7 +22,7 @@ To use ShellKit in your macOS project, follow these steps:
     
     ```swift
     dependencies: [
-        .package(url: "https://github.com/antoniopantaleo/ShellKit.git", from: "1.0.0")
+        .package(url: "https://github.com/antoniopantaleo/ShellKit.git", from: "2.0.0")
     ]
     
     ```
@@ -37,8 +37,8 @@ To use ShellKit in your macOS project, follow these steps:
     
     ```swift
     func listFiles() async throws -> String {
-        let shell: Shell = ZshShell()
-        let files = try await shell.run("ls")
+        let shell: Shell = EnvironmentShell()
+        let files = try await shell.run("ls", "-a")
         return files
     }
     ```
