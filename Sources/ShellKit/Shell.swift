@@ -8,5 +8,5 @@
 import Foundation
 
 public protocol Shell {
-    func run(_ command: String) async throws -> String
+    func run(_ command: String...) async throws -> String
 }
