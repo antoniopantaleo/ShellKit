@@ -1,55 +1,55 @@
 //
 //  EnvironmentShell.swift
-//  
+//
 //
 //  Created by Antonio on 24/10/23.
 //
 
 import Foundation
 
-public struct EnvironmentShell: Shell {
+public final class EnvironmentShell: Shell {
     
-    private var COMMAND_OK_CODE: Int { 0 }
-    private var encodingError: NSError {
-        NSError(
-            domain: NSCocoaErrorDomain,
-            code: NSFileReadInapplicableStringEncodingError
-        )
-    }
+    private static let COMMAND_OK_CODE: Int = 0
+    private static let encodingError = NSError(
+        domain: NSCocoaErrorDomain,
+        code: NSFileReadInapplicableStringEncodingError
+    )
     
     public init() {}
     
     @discardableResult
     public func run(_ command: String...) async throws -> String {
-        let task = Process()
+        let process = Process()
+        
         let pipe = Pipe()
+        process.qualityOfService = .userInitiated
+        process.standardOutput = pipe
+        process.standardError = pipe
+        process.arguments = command
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.standardInput = nil
         
-        task.qualityOfService = .userInitiated
-        task.standardOutput = pipe
-        task.standardError = pipe
-        task.arguments = command
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        task.standardInput = nil
-        
-        try task.run()
-        let bytes = pipe.fileHandleForReading.bytes
-        var output = ""
-        
-        while task.isRunning {
-            for try await byte in bytes {
-                let data = Data([byte])
-                guard let chunk = String(data: data, encoding: .utf8) else { throw encodingError }
-                output += chunk
+        return try await withTaskCancellationHandler {
+            let task = Task.detached {
+                var output: String = ""
+                try process.run()
+                let bytes = pipe.fileHandleForReading.bytes
+                while process.isRunning {
+                    for try await byte in bytes {
+                        let data = Data([byte])
+                        guard let chunk = String(data: data, encoding: .utf8) else { throw Self.encodingError }
+                        output += chunk
+                    }
+                }
+                output = output.trimmingCharacters(in: .newlines)
+                guard process.terminationStatus == Self.COMMAND_OK_CODE else {
+                    throw NSError(domain: output, code: Int(process.terminationStatus))
+                }
+                return output
             }
+            return try await task.value
+        } onCancel: {
+            process.terminate()
         }
-        
-        output = output.trimmingCharacters(in: .newlines)
-        
-        if task.terminationStatus != COMMAND_OK_CODE  {
-            let errorCode = Int(task.terminationStatus)
-            throw NSError(domain: output, code: errorCode)
-        }
-        
-        return output
     }
 }

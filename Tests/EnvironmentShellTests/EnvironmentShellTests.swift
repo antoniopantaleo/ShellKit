@@ -50,10 +50,37 @@ final class EnvironmentShellTests: XCTestCase {
         let sut = EnvironmentShell()
         Task {
             // When
-            _ = try await sut.run("echo", "Hello World")
+            try await sut.run("echo", "Hello World")
             // Then
             XCTAssertFalse(Thread.isMainThread)
         }
+    }
+
+    func test_runCommandWithDelay_isCancelledBeforeCompletion() async {
+        // Given
+        let sut = EnvironmentShell()
+        // When
+        let task = Task<String, Error> {
+            try await Task.sleep(for: .seconds(5))
+            return try await sut.run("echo", "hello world")
+        }
+        try? await Task.sleep(for: .seconds(1))
+        task.cancel()
+        let value = try? await task.value
+        XCTAssertNil(value)
+    }
+    
+    func test_longRunningCommand_isCancelledBeforeCompletion() async {
+        // Given
+        let sut = EnvironmentShell()
+        // When
+        let task = Task<String, Error> {
+            return try await sut.run("sleep", "5")
+        }
+        try? await Task.sleep(for: .seconds(1))
+        task.cancel()
+        let value = try? await task.value
+        XCTAssertNil(value)
     }
 
 }
